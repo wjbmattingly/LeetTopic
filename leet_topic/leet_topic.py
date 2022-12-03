@@ -27,12 +27,11 @@ def create_labels(df):
     df["x"] = umap_proj[:,0]
     df["y"] = umap_proj[:,1]
     df["hdbscan_labels"] = hdbscan_labels
-    # outlier = [True if topic == -1 else False for topic in hdbscan_labels]
-    # df["outlier"] = outlier
+
     return df
 
 def find_centers(df):
-    #Get coordinates for each
+    #Get coordinates for each document in each topic
     topic_data = {}
     for i, topic in enumerate(df.hdbscan_labels.tolist()):
         if topic != -1:
@@ -40,7 +39,7 @@ def find_centers(df):
                 topic_data[topic] = {"center": [], "coords": []}
             topic_data[topic]["coords"].append((df["x"][i], df["y"][i]))
 
-    #Calculate Center
+    #Calculate the center of the topic
     for topic, data in topic_data.items():
         x = [coord[0] for coord in data["coords"]]
         y = [coord[1] for coord in data["coords"]]
