@@ -1,4 +1,4 @@
-![Leet Topic Logo](https://github.com/wjbmattingly/LeetTopic/raw/main/images/leettopic-logo.png)
+![Leet Topic Logo](https://github.com/wjbmattingly/LeetTopic/raw/main/images/LeeTopic.png)
 
 LeetTopic builds upon Top2Vec, BerTopic and other transformer-based topic modeling Python libraries. Unlike BerTopic and Top2Vec, LeetTopic allows users to control the degree to which outliers are resolved into neighboring topics.
 
@@ -11,7 +11,7 @@ pip install leet-topic
 ```
 
 # Usage
-```{python}
+```python
 import pandas as pd
 from leet_topic import leet_topic
 
