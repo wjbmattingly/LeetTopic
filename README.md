@@ -11,11 +11,11 @@ pip install leet-topic
 ```
 
 # Parameters
-df => a Pandas DataFrame that contains the documents that you want to model
-document_field => the DataFrame column name where your documents sit
-html_filename => the filename used to generate the Bokeh application
-extra_fields => a list of extra columns to include in the Bokeh application
-max_distance => The maximum distance between a document and the nearest topic vector to be considered for outliers
+- df => a Pandas DataFrame that contains the documents that you want to model
+- document_field => the DataFrame column name where your documents sit
+- html_filename => the filename used to generate the Bokeh application
+- extra_fields => a list of extra columns to include in the Bokeh application
+- max_distance => The maximum distance between a document and the nearest topic vector to be considered for outliers
 
 # Usage
 
