@@ -10,6 +10,13 @@ It also lets you turn any DataFrame into a Bokeh application for exploring your 
 pip install leet-topic
 ```
 
+# Parameters
+df => a Pandas DataFrame that contains the documents that you want to model
+document_field => the DataFrame column name where your documents sit
+html_filename => the filename used to generate the Bokeh application
+extra_fields => a list of extra columns to include in the Bokeh application
+max_distance => The maximum distance between a document and the nearest topic vector to be considered for outliers
+
 # Usage
 
 ```python
@@ -23,6 +30,7 @@ new_df, topic_data = leet_topic.LeetTopic(df,
                                           extra_fields=["names", "hdbscan_labels"],
                                           max_distance=.5)
 ```
+
 This code above will generate a new DataFrame with the UMAP Projection (x, y), hdbscan_labels, and leet_labels, and top-n words for each document. It will also output data about each topic including the central plot of each vector, the documents assigned to it, top-n words associated with it.
 
 Finally, the output will create an HTML file that is a self-contained Bokeh application like the image below.
