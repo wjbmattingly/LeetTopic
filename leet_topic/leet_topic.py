@@ -8,7 +8,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 import gensim.corpora as corpora
 from random import random
-
 from bokeh.layouts import row, column
 from bokeh.models import ColumnDataSource, CustomJS, DataTable, TableColumn, MultiChoice, HTMLTemplateFormatter, TextAreaInput
 from bokeh.plotting import figure, output_file, show
@@ -21,7 +20,7 @@ from bokeh.transform import linear_cmap
 from typing import Tuple, Optional
 import bokeh
 import bokeh.transform
-
+import string
 import logging
 import warnings
 
@@ -79,9 +78,6 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[])
     fields = fields+extra_fields
     output_file(html_filename)
 
-
-    # df = pd.read_csv("demo.csv")
-
     mapper, df = get_color_mapping(df, topic_field)
     df['selected'] = False
     categories = df[topic_field].unique()
@@ -105,7 +101,6 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[])
     circle_kwargs = {"x": "x", "y": "y",
                         "size": 3,
                         "source": s1,
-                        # "alpha": "alpha",
                          "color": mapper
                         }
     scatter = p1.circle(**circle_kwargs)
@@ -116,7 +111,6 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[])
     circle_kwargs2 = {"x": "x", "y": "y",
                         "size": 3,
                         "source": s2,
-                        # "alpha": "alpha",
                          "color": mapper
                         }
     scatter2 = p2.circle(**circle_kwargs2)
@@ -162,14 +156,12 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[])
             const d4 = s4;"""+list_creator(fields=fields, str_type="field")+
             """for (let i = 0; i < inds.length; i++) {"""+
             list_creator(fields=fields, str_type="push")+
-
             """}
             const res = [...new Set(d2['"""+topic_field+"""'])];
 
             d4.value = res.map(function(e){return e.toString()});
             s1.change.emit();
             s2.change.emit();
-
         """)
     )
 
@@ -181,7 +173,6 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[])
             const d2 = s2.data;
             const plot = scatter;
             s2.selected.indices = [];
-
             for (let i = 0; i < s1.selected.indices.length; i++) {
                 for (let j =0; j < values.length; j++) {
                     if (d1."""+topic_field+"""[s1.selected.indices[i]] == values[j]) {
@@ -189,29 +180,23 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[])
                     }
                 }
             }
-
             """+list_creator(fields=fields, str_type="field")+
             """
             for (let i = 0; i < s1.selected.indices.length; i++) {
                 if (unchange_values.includes(String(d1."""+topic_field+"""[s1.selected.indices[i]]))) {
                     """+
                     list_creator(fields=fields, str_type="indices")+
-
                     """
                 }
             }
-
             for (let i = 0; i < d1."""+topic_field+""".length; i++) {
                 if (values.includes(String(d1."""+topic_field+"""[i]))) {
                         """+
                         list_creator(fields=fields, str_type="push2")+
-
                         """
                 }
             }
-
             s2.change.emit();
-
         """)
     )
 
@@ -227,18 +212,12 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[])
                 data.push(" (Topic: " + d2['"""+topic_field+"""'][inds[i]] + ")")
                 data.push("Document: " + d2['"""+document_field+"""'][inds[i]])
                 data.push("\\r\\n")
-
             }
             s2.change.emit();
             s_texts.value = data.join("\\r\\n")
             s_texts.change.emit();
-
-
-
-
         """)
     )
-
 
     col1 = column(p1, multi_choice)
     col2 = column(data_table, selected_texts)
@@ -247,10 +226,12 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[])
     show(layout)
 
 
-def create_labels(df, document_field):
+def create_labels(df, document_field, encoding_model,
+                  umap_params={"n_neighbors": 50, "min_dist": 0.01, "metric": 'correlation'},
+                  hdbscan_params={"min_samples": 10, "min_cluster_size": 50}):
 
     #Load Transformer Model
-    model = SentenceTransformer('all-MiniLM-L6-v2')
+    model = SentenceTransformer(encoding_model)
 
     #Create Document Embeddings
     logging.info("Encoding Documents")
@@ -258,13 +239,11 @@ def create_labels(df, document_field):
 
     #Create UMAP Projection
     logging.info("Creating UMAP Projections")
-    umap_proj = umap.UMAP(n_neighbors=50,
-                              min_dist=0.01,
-                              metric='correlation').fit_transform(doc_embeddings)
+    umap_proj = umap.UMAP(**umap_params).fit_transform(doc_embeddings)
 
     #Create HDBScan Label
     logging.info("Finding Clusters with HDBScan")
-    hdbscan_labels = hdbscan.HDBSCAN(min_samples=2, min_cluster_size=2).fit_predict(umap_proj)
+    hdbscan_labels = hdbscan.HDBSCAN(**hdbscan_params).fit_predict(umap_proj)
     df["x"] = umap_proj[:,0]
     df["y"] = umap_proj[:,1]
     df["hdbscan_labels"] = hdbscan_labels
@@ -309,13 +288,13 @@ def get_leet_labels(df, topic_data, max_distance):
     return df
 
 
-def create_tfidf(df, topic_data, document_field):
-    nlp = spacy.load("en_core_web_sm", disable=["ner"])
+def create_tfidf(df, topic_data, document_field, spacy_model):
+    nlp = spacy.load(spacy_model, disable=["ner", "attribute_ruler", "tagger", "parser"])
     lemma_docs = []
     for text in df[document_field].tolist():
         text = "".join([c for c in text if c.isdigit() == False])
         doc = nlp(text)
-        lemma_docs.append(" ".join([token.lemma_.lower() for token in doc if token.pos_ != "PUNCT"]))
+        lemma_docs.append(" ".join([token.lemma_.lower() for token in doc if token.text not in string.punctuation]))
 
     df["lemma_docs"] = lemma_docs
     vectorizer = TfidfVectorizer(stop_words="english")
@@ -324,7 +303,6 @@ def create_tfidf(df, topic_data, document_field):
     dense = vectors.todense()
     denselist = dense.tolist()
     tfidf_df = pd.DataFrame(denselist, columns=feature_names)
-
 
     top_n = 10
     tfidf_words = []
@@ -369,18 +347,31 @@ def calculate_topic_relevance(df, topic_data):
     return df, topic_data
 
 
+def download_spacy_model(spacy_model):
+    try:
+        nlp = spacy.load(spacy_model)
+    except OSError:
+        print(f'Downloading language model ({spacy_model}) for the spaCy POS tagger\n'
+            "(don't worry, this will only happen once)")
+        from spacy.cli import download
+        download(spacy_model)
+        # nlp = spacy.load(language_model)
 
+def LeetTopic(df, document_field, html_filename, extra_fields=[], max_distance=.5,
+                spacy_model="en_core_web_sm", encoding_model='all-MiniLM-L6-v2',
+                umap_params={"n_neighbors": 50, "min_dist": 0.01, "metric": 'correlation'},
+                hdbscan_params={"min_samples": 10, "min_cluster_size": 50}):
 
-def LeetTopic(df, document_field, html_filename, extra_fields=[], max_distance=.5):
-    # df["documents"] = df[document_field]
-    df = create_labels(df, document_field)
+    download_spacy_model(spacy_model)
+
+    df = create_labels(df, document_field, encoding_model, umap_params=umap_params, hdbscan_params=hdbscan_params)
     logging.info("Calculating the Center of the Topic Clusters")
     topic_data = find_centers(df)
     logging.info(f"Recalculating clusters based on a max distance of {max_distance} from any topic vector")
     df = get_leet_labels(df, topic_data, max_distance)
 
     logging.info("Creating TF-IDF representation for documents")
-    df, topic_data = create_tfidf(df, topic_data, document_field)
+    df, topic_data = create_tfidf(df, topic_data, document_field, spacy_model)
 
     logging.info("Creating TF-IDF representation for topics")
     df, topic_data = calculate_topic_relevance(df, topic_data)
@@ -391,7 +382,6 @@ def LeetTopic(df, document_field, html_filename, extra_fields=[], max_distance=.
                 topic_field="leet_labels",
                 html_filename=html_filename,
                 extra_fields=extra_fields)
-    # create_html(df, "documents", topic_field, html_filename)
     return df, topic_data
 
 
