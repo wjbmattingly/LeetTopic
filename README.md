@@ -81,5 +81,15 @@ LeetTopic, like Top2Vec, then calculates the centroid for each topic based on th
 
 
 
-# Future Updates
-A future update will allow users to control the parameters for UMAP and HDBScan. Another update will allow users to search the documents and topics via an Annoy Index.
+# Future Roadmap
+## 0.0.9
+- Control UMAP parameters
+- Control HDBScan parameters
+- Multilingual support for lemmatization
+- Multilingual support for embedding
+
+## 0.0.10
+- Output an Annoy Index so that the data can be queried
+
+## 0.0.11
+- Support for embedding text, images, or both via CLIP and displaying the results in the same bokeh application
