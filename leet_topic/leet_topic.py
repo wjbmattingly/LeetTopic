@@ -3,7 +3,6 @@ from sentence_transformers import SentenceTransformer
 import umap
 import hdbscan
 import math
-from annoy import AnnoyIndex
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
@@ -249,7 +248,7 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[])
 
 
 def create_labels(df, document_field):
-    
+
     #Load Transformer Model
     model = SentenceTransformer('all-MiniLM-L6-v2')
 
