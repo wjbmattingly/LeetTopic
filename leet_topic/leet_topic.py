@@ -97,7 +97,6 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[])
 
 
     p1 = figure(width=500, height=500, tools="pan,tap,wheel_zoom,lasso_select,box_zoom,box_select,reset", active_scroll="wheel_zoom", title="Select Here", x_range=(df.x.min(), df.x.max()), y_range=(df.y.min(), df.y.max()))
-    # p1.circle('x', 'y', source=s1, alpha=0.6)
     circle_kwargs = {"x": "x", "y": "y",
                         "size": 3,
                         "source": s1,
@@ -105,9 +104,9 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[])
                         }
     scatter = p1.circle(**circle_kwargs)
 
-    s2 = ColumnDataSource(data=dict(x=[], y=[]))
+    s2 = ColumnDataSource(data=dict(x=[], y=[], leet_labels=[]))
     p2 = figure(width=500, height=500, tools="pan,tap,lasso_select,wheel_zoom,box_zoom,box_select,reset", active_scroll="wheel_zoom", title="Analyze Selection", x_range=(df.x.min(), df.x.max()), y_range=(df.y.min(), df.y.max()))
-    # p1.circle('x', 'y', source=s1, alpha=0.6)
+
     circle_kwargs2 = {"x": "x", "y": "y",
                         "size": 3,
                         "source": s2,
