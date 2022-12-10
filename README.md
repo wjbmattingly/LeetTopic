@@ -75,9 +75,9 @@ Finally, the output will create an HTML file that is a self-contained Bokeh appl
 
 # Steps
 
-LeetTopic takes an input DataFrame and converts the document field (texts to model) into embeddings. Next, UMAP is used to reduce the embeddings to 2 dimensions. HDBScan is then used to assign documents to topics. Like BerTopic and Top2Vec, at this stage, there are many outliers (-1).
+LeetTopic takes an input DataFrame and converts the document field (texts to model) into embeddings via a transformer model. Next, UMAP is used to reduce the embeddings to 2 dimensions. HDBScan is then used to assign documents to topics. Like BerTopic and Top2Vec, at this stage, there are many outliers (topics assigned to -1).
 
-LeetTopic, like Top2Vec, then calculates the centroid for each topic based on the HDBScan labels while ignoring topic -1 (outlier). Next, all outliers are assigned to nearest topic centroid. Unlike Top2Vec, LeetTopic gives the user the ability to set a max distance so that outliers that are significantly away from a vector are not assigned to a nearest vector. At the same time, the output DataFrame contains information about the original HDBScan topics, meaning users know if a document was originally an outlier.
+LeetTopic, like Top2Vec, then calculates the centroid for each topic vector based on the HDBScan labels while ignoring topic -1 (outlier). Next, all outlier documents are assigned to nearest topic centroid. Unlike Top2Vec, LeetTopic gives the user the ability to set a max distance so that outliers that are significantly away from a topic vector, they are not assigned to a nearest vector. At the same time, the output DataFrame contains information about the original HDBScan topics, meaning users know if a document was originally an outlier.
 
 
 
