@@ -87,6 +87,7 @@ LeetTopic, like Top2Vec, then calculates the centroid for each topic based on th
 - Control HDBScan parameters
 - Multilingual support for lemmatization
 - Multilingual support for embedding
+- Add support for custom App Titles
 
 ## 0.0.10
 - Output an Annoy Index so that the data can be queried

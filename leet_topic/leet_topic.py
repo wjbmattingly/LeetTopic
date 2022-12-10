@@ -9,7 +9,7 @@ import numpy as np
 import gensim.corpora as corpora
 from random import random
 from bokeh.layouts import row, column
-from bokeh.models import ColumnDataSource, CustomJS, DataTable, TableColumn, MultiChoice, HTMLTemplateFormatter, TextAreaInput
+from bokeh.models import ColumnDataSource, CustomJS, DataTable, TableColumn, MultiChoice, HTMLTemplateFormatter, TextAreaInput, Div
 from bokeh.plotting import figure, output_file, show
 import pandas as pd
 from sentence_transformers import SentenceTransformer
@@ -73,7 +73,7 @@ def get_color_mapping(
 
 
 
-def create_html(df, document_field, topic_field, html_filename, extra_fields=[]):
+def create_html(df, document_field, topic_field, html_filename, extra_fields=[], app_name=""):
     fields = ["x", "y", document_field, topic_field, "selected"]
     fields = fields+extra_fields
     output_file(html_filename)
@@ -221,7 +221,12 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[])
     col1 = column(p1, multi_choice)
     col2 = column(data_table, selected_texts)
     col3 = column(p2)
-    layout = row(col1, col2, col3)
+    app_row = row(col1, col2, col3)
+    if app_name != "":
+        title = Div(text=f'<h1 style="text-align: center">{app_name}</h1>')
+        layout = column(title, app_row, sizing_mode='scale_width')
+    else:
+        layout=app_row
     show(layout)
 
 
@@ -359,7 +364,8 @@ def download_spacy_model(spacy_model):
 def LeetTopic(df, document_field, html_filename, extra_fields=[], max_distance=.5,
                 spacy_model="en_core_web_sm", encoding_model='all-MiniLM-L6-v2',
                 umap_params={"n_neighbors": 50, "min_dist": 0.01, "metric": 'correlation'},
-                hdbscan_params={"min_samples": 10, "min_cluster_size": 50}):
+                hdbscan_params={"min_samples": 10, "min_cluster_size": 50},
+                app_name=""):
 
     download_spacy_model(spacy_model)
 
@@ -380,7 +386,9 @@ def LeetTopic(df, document_field, html_filename, extra_fields=[], max_distance=.
                 document_field=document_field,
                 topic_field="leet_labels",
                 html_filename=html_filename,
-                extra_fields=extra_fields)
+                extra_fields=extra_fields,
+                app_name=app_name)
+    df = df.drop("selected", axis=1)
     return df, topic_data
 
 
