@@ -380,6 +380,8 @@ def create_annoy(doc_embeddings,
         annoy_filename = annoy_filename+".ann"
     t.save(annoy_filename)
 
+    return t
+
 
 def LeetTopic(df: pd.DataFrame,
             document_field: str,
@@ -471,6 +473,7 @@ def LeetTopic(df: pd.DataFrame,
     df = df.drop("selected", axis=1)
 
     if build_annoy == True:
+        logging.info(f"Building an Annoy Index and saving it to {annoy_filename}")
         annoy_index = create_annoy(doc_embeddings, encoding_model,
                     annoy_filename=annoy_filename,
                     annoy_branches=annoy_branches,
