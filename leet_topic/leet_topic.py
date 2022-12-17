@@ -232,14 +232,18 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[],
 
 def create_labels(df, document_field, encoding_model,
                   umap_params={"n_neighbors": 50, "min_dist": 0.01, "metric": 'correlation'},
-                  hdbscan_params={"min_samples": 10, "min_cluster_size": 50}):
+                  hdbscan_params={"min_samples": 10, "min_cluster_size": 50},
+                  doc_embeddings=None):
+    # print(type(doc_embeddings))
+    if str(type(doc_embeddings)) == "<class 'NoneType'>":
+        #Load Transformer Model
+        model = SentenceTransformer(encoding_model)
 
-    #Load Transformer Model
-    model = SentenceTransformer(encoding_model)
-
-    #Create Document Embeddings
-    logging.info("Encoding Documents")
-    doc_embeddings = model.encode(df[document_field])
+        #Create Document Embeddings
+        logging.info("Encoding Documents")
+        doc_embeddings = model.encode(df[document_field])
+        logging.info("Saving Embeddings")
+        np.save("embeddings", doc_embeddings)
 
     #Create UMAP Projection
     logging.info("Creating UMAP Projections")
@@ -366,8 +370,11 @@ def LeetTopic(df: pd.DataFrame,
             html_filename: str,
             extra_fields=[],
             max_distance=.5,
+            tf_idf = False,
             spacy_model="en_core_web_sm",
             encoding_model='all-MiniLM-L6-v2',
+            save_embeddings=True,
+            doc_embeddings = None,
             umap_params={"n_neighbors": 50, "min_dist": 0.01, "metric": 'correlation'},
             hdbscan_params={"min_samples": 10, "min_cluster_size": 50},
             app_name=""
@@ -418,16 +425,20 @@ def LeetTopic(df: pd.DataFrame,
 
     download_spacy_model(spacy_model)
 
-    df = create_labels(df, document_field, encoding_model, umap_params=umap_params, hdbscan_params=hdbscan_params)
+    df = create_labels(df, document_field,
+                    encoding_model, doc_embeddings=doc_embeddings,
+                    umap_params=umap_params, hdbscan_params=hdbscan_params)
     logging.info("Calculating the Center of the Topic Clusters")
     topic_data = find_centers(df)
     logging.info(f"Recalculating clusters based on a max distance of {max_distance} from any topic vector")
     df = get_leet_labels(df, topic_data, max_distance)
 
-    logging.info("Creating TF-IDF representation for documents")
-    df, topic_data = create_tfidf(df, topic_data, document_field, spacy_model)
 
-    logging.info("Creating TF-IDF representation for topics")
+    if tf_idf==True:
+        logging.info("Creating TF-IDF representation for documents")
+        df, topic_data = create_tfidf(df, topic_data, document_field, spacy_model)
+
+    logging.info("Creating Topic Relevance")
     df, topic_data = calculate_topic_relevance(df, topic_data)
 
     logging.info("Generating custom Bokeh application")
