@@ -4,7 +4,7 @@
 
 LeetTopic builds upon [Top2Vec](https://github.com/ddangelov/Top2Vec), [BerTopic](https://github.com/MaartenGr/BERTopic) and other transformer-based topic modeling Python libraries. Unlike BerTopic and Top2Vec, LeetTopic allows users to control the degree to which outliers are resolved into neighboring topics.
 
-It also lets you turn any DataFrame into a [Bokeh](https://bokeh.org/) application for exploring your documents and topics. As of 0.0.10, LeetTopic also allows users to generate an [Annoy](https://github.com/spotify/annoy) Index as part of the LeetTopic pipeline. This allowws users to construct a query their data.
+It also lets you turn any DataFrame into a [Bokeh](https://bokeh.org/) application for exploring your documents and topics. As of 0.0.10, LeetTopic also allows users to generate an [Annoy](https://github.com/spotify/annoy) Index as part of the LeetTopic pipeline. This allows users to construct a query their data.
 
 # Installation
 
