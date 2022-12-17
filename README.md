@@ -76,8 +76,8 @@ import pandas as pd
 from leet_topic import leet_topic
 
 df = pd.read_json("data/vol7.json")
-leet_df, topic_data, annoy_index = leet_topic.LeetTopic(df, "latin",
-            "vulgate.html",
+leet_df, topic_data, annoy_index = leet_topic.LeetTopic(df, "descriptions",
+            "demo.html",
             build_annoy=True)
 ```
 
