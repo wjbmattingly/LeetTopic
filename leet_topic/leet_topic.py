@@ -366,7 +366,6 @@ def download_spacy_model(spacy_model):
         download(spacy_model)
 
 def create_annoy(doc_embeddings,
-                encoding_model,
                 annoy_filename="annoy_index.ann",
                 annoy_branches=10,
                 annoy_metric="angular"
@@ -474,7 +473,7 @@ def LeetTopic(df: pd.DataFrame,
 
     if build_annoy == True:
         logging.info(f"Building an Annoy Index and saving it to {annoy_filename}")
-        annoy_index = create_annoy(doc_embeddings, encoding_model,
+        annoy_index = create_annoy(doc_embeddings,
                     annoy_filename=annoy_filename,
                     annoy_branches=annoy_branches,
                     annoy_metric=annoy_metric)
