@@ -23,6 +23,7 @@ import bokeh.transform
 import string
 import logging
 import warnings
+from annoy import AnnoyIndex
 
 warnings.filterwarnings("ignore")
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
@@ -256,7 +257,7 @@ def create_labels(df, document_field, encoding_model,
     df["y"] = umap_proj[:,1]
     df["hdbscan_labels"] = hdbscan_labels
 
-    return df
+    return df, doc_embeddings
 
 def find_centers(df):
     #Get coordinates for each document in each topic
@@ -363,7 +364,22 @@ def download_spacy_model(spacy_model):
             "(don't worry, this will only happen once)")
         from spacy.cli import download
         download(spacy_model)
-        # nlp = spacy.load(language_model)
+
+def create_annoy(doc_embeddings,
+                encoding_model,
+                annoy_filename="annoy_index.ann",
+                annoy_branches=10,
+                annoy_metric="angular"
+                ):
+    t = AnnoyIndex(doc_embeddings.shape[0], annoy_metric)
+    for idx, embedding in enumerate(doc_embeddings):
+        t.add_item(idx, embedding)
+
+    t.build(annoy_branches)
+    if ".ann" not in annoy_filename:
+        annoy_filename = annoy_filename+".ann"
+    t.save(annoy_filename)
+
 
 def LeetTopic(df: pd.DataFrame,
             document_field: str,
@@ -377,7 +393,11 @@ def LeetTopic(df: pd.DataFrame,
             doc_embeddings = None,
             umap_params={"n_neighbors": 50, "min_dist": 0.01, "metric": 'correlation'},
             hdbscan_params={"min_samples": 10, "min_cluster_size": 50},
-            app_name=""
+            app_name="",
+            build_annoy=False,
+            annoy_filename="annoy_index.ann",
+            annoy_branches=10,
+            annoy_metric="angular"
             ):
     """
     Parameters
@@ -425,7 +445,7 @@ def LeetTopic(df: pd.DataFrame,
 
     download_spacy_model(spacy_model)
 
-    df = create_labels(df, document_field,
+    df, doc_embeddings = create_labels(df, document_field,
                     encoding_model, doc_embeddings=doc_embeddings,
                     umap_params=umap_params, hdbscan_params=hdbscan_params)
     logging.info("Calculating the Center of the Topic Clusters")
@@ -449,6 +469,14 @@ def LeetTopic(df: pd.DataFrame,
                 extra_fields=extra_fields,
                 app_name=app_name)
     df = df.drop("selected", axis=1)
+
+    if build_annoy == True:
+        annoy_index = create_annoy(doc_embeddings, encoding_model,
+                    annoy_filename=annoy_filename,
+                    annoy_branches=annoy_branches,
+                    annoy_metric=annoy_metric)
+        return df, topic_data, annoy_index
+
     return df, topic_data
 
 
