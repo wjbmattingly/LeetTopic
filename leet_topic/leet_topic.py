@@ -222,7 +222,8 @@ def create_html(df, document_field, topic_field, html_filename, topic_data, tf_i
         """)
     )
     
-    top_search.js_on_change('value', CustomJS(args=dict(topic_data=topic_data, top_search_results=top_search_results, s4=multi_choice), code="""
+    top_search.js_on_change('value', CustomJS(args=dict(topic_data=topic_data, top_search_results=top_search_results, s4=multi_choice, s1=s1), code="""
+        s1.selected.indices = []
         const search_term = cb_obj.value;
         let hits = [];
         let counter = 0;
@@ -250,6 +251,14 @@ def create_html(df, document_field, topic_field, html_filename, topic_data, tf_i
         
         top_search_results.value = data.join("\\r\\n");
         
+        let inds = [];
+        for (let i=0; i < hits.length; i++) {
+            inds.push(hits[i][0]);
+        }
+        
+        const res = [...new Set(inds)];
+        
+        s4.value = res.map(function(e){return e.toString()});
     
     """)
     )
@@ -304,9 +313,6 @@ def create_html(df, document_field, topic_field, html_filename, topic_data, tf_i
         d4.value = res.map(function(e){return e.toString()});
         s1.change.emit();
         s2.change.emit();
-
-        console.log(s1.data);
-        console.log(s1.selected.indices);
         
     
     """)
