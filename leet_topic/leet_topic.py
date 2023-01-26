@@ -9,7 +9,7 @@ import numpy as np
 import gensim.corpora as corpora
 from random import random
 from bokeh.layouts import row, column
-from bokeh.models import ColumnDataSource, CustomJS, DataTable, TableColumn, MultiChoice, HTMLTemplateFormatter, TextAreaInput, Div
+from bokeh.models import ColumnDataSource, CustomJS, DataTable, TableColumn, MultiChoice, HTMLTemplateFormatter, TextAreaInput, Div, TextInput
 from bokeh.plotting import figure, output_file, show
 import pandas as pd
 from sentence_transformers import SentenceTransformer
@@ -74,7 +74,7 @@ def get_color_mapping(
 
 
 
-def create_html(df, document_field, topic_field, html_filename, extra_fields=[], app_name=""):
+def create_html(df, document_field, topic_field, html_filename, topic_data, tf_idf, extra_fields=[], app_name=""):
     fields = ["x", "y", document_field, topic_field, "selected"]
     fields = fields+extra_fields
     output_file(html_filename)
@@ -123,7 +123,11 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[],
                           sortable=True,
                           autosize_mode='none')
     selected_texts = TextAreaInput(value = "", title = "Selected texts", width = 700, height=500)
-
+    top_search_results = TextAreaInput(value = "", title = "Search Results", width = 250, height=500)
+    top_search = TextInput(title="Topic Search")
+    doc_search_results = TextAreaInput(value = "", title = "Search Results", width = 250, height=500)
+    doc_search = TextInput(title="Document Search")
+    
     def field_string(field):
         return """d2['"""+field+"""'] = []\n"""
 
@@ -158,7 +162,6 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[],
             list_creator(fields=fields, str_type="push")+
             """}
             const res = [...new Set(d2['"""+topic_field+"""'])];
-
             d4.value = res.map(function(e){return e.toString()});
             s1.change.emit();
             s2.change.emit();
@@ -218,10 +221,103 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[],
             s_texts.change.emit();
         """)
     )
+    
+    top_search.js_on_change('value', CustomJS(args=dict(topic_data=topic_data, top_search_results=top_search_results, s4=multi_choice), code="""
+        const search_term = cb_obj.value;
+        let hits = [];
+        let counter = 0;
+        for (const [key, value] of topic_data) {
+            const keywords = value["key_words"];
+            for (let i=0; i < keywords.length; i++) {
+                if (keywords[i][0] == search_term) {
+                    hits.push([key, i]);
+                }
+            }
+        }
+        hits.sort(function(a, b) {
+            return a[1] - b[1];
+        });
+        
+        const data = [];
+        if (hits.length) {
+            for (let i = 0; i < hits.length; i++) { 
+                data.push('Topic ' + hits[i][0] + ' has "' + search_term + '" as number ' + hits[i][1] + ' in its keyword list.');
+                data.push("\\r\\n");
+            }
+        } else if (search_term != "") {
+            data.push('No keyword matches with any topic for "' + search_term + '".');
+        }
+        
+        top_search_results.value = data.join("\\r\\n");
+        
+    
+    """)
+    )
+    
+    doc_search.js_on_change('value', CustomJS(args=dict(s1=s1, s2=s2, df=df.to_dict(), doc_search_results=doc_search_results, s4=multi_choice), code="""
+        s1.selected.indices = []
+        const search_term = cb_obj.value;
+        let hits = [];
+        let counter = 0;
+        let id_count = 0;
+        for (let i = 0; i < s1.data.top_words.length; i++) {
+            for (let j = 0; j <s1.data.top_words[i].length; j++) { 
+                if (search_term == s1.data.top_words[i][j][0]) { 
+                    hits.push([id_count, j]);
+                }
+                
+            }
+            id_count = id_count + 1;
+        }
+        
+        hits.sort(function(a, b) {
+            return a[1] - b[1];
+        });
+        
+        const data = [];
+        if (hits.length) {
+            for (let i = 0; i < hits.length; i++) { 
+                data.push('Document ' + hits[i][0] + ' has "' + search_term + '" as number ' + hits[i][1] + ' in its top_words list.');
+                data.push("\\r\\n");
+            }
+        } else if (search_term != "") {
+            data.push('No keyword matches with any document for "' + search_term + '".');
+        }
+        
+        doc_search_results.value = data.join("\\r\\n");
+        
+        let inds = [];
+        for (let i=0; i <hits.length; i++) {
+            inds.push(hits[i][0]);
+            s1.selected.indices.push(hits[i][0]);
+        }
+        
+        
+        
+        const d1 = s1.data;
+        const d2 = s2.data;
+        const d4 = s4;"""+list_creator(fields=fields, str_type="field")+
+        """for (let i = 0; i < inds.length; i++) {"""+
+        list_creator(fields=fields, str_type="push")+
+        """}
+        const res = [...new Set(d2['"""+topic_field+"""'])];
+        d4.value = res.map(function(e){return e.toString()});
+        s1.change.emit();
+        s2.change.emit();
 
-    col1 = column(p1, multi_choice)
+        console.log(s1.data);
+        console.log(s1.selected.indices);
+        
+    
+    """)
+    )
+
+    col1 = column(p1, multi_choice) 
     col2 = column(data_table, selected_texts)
-    col3 = column(p2)
+    if tf_idf:
+        col3 = column(p2, row(column(doc_search, doc_search_results), column(top_search, top_search_results)))
+    else:
+        col3 = column(p2, doc_search, doc_search_results)
     app_row = row(col1, col2, col3)
     if app_name != "":
         title = Div(text=f'<h1 style="text-align: center">{app_name}</h1>')
@@ -405,41 +501,28 @@ def LeetTopic(df: pd.DataFrame,
     ----------
     df: pd.DataFrame
         DataFrame that contains at least one field that are the documents you wish to model
-
     document_field: str
         a string that is the name of the column in which the documents in the DataFrame sit
-
     html_filename: str
         the name of the html file that will be created by the LeetTopic pipeline
-
     extra_fields: list of str (Optional)
         These are the names of the columns you wish to include in the Bokeh application.
-
     max_distance: float (Optional default .5)
         The maximum distance an outlier document can be to the nearest topic vector to be assigned
-
     spacy_modoel: str (Optional default en_core_web_sm)
         the spaCy language model you will use for lemmatization
-
     encoding_model: str (Optional default all-MiniLM-L6-v2)
         the sentence transformers model that you wish to use to encode your documents
-
     umap_params: dict (Optional default {"n_neighbors": 50, "min_dist": 0.01, "metric": 'correlation'})
         dictionary of keys to UMAP params and values for those params
-
     hdbscan_params: dict (Optional default {"min_samples": 10, "min_cluster_size": 50})
         dictionary of keys to HBDscan params and values for those params
-
     app_name: str (Optional)
         title of your Bokeh application
-
-
     Returns
     ----------
-
     df: pd.DataFrame
         This is the new dataframe that contains the metadata generated from the LeetTopic pipeline
-
     topic_data: dict
         This is topic-centric data generated by the LeetTopic pipeline
     """
@@ -467,8 +550,11 @@ def LeetTopic(df: pd.DataFrame,
                 document_field=document_field,
                 topic_field="leet_labels",
                 html_filename=html_filename,
+                topic_data=topic_data,
+                tf_idf=tf_idf,
                 extra_fields=extra_fields,
-                app_name=app_name)
+                app_name=app_name,
+               )
     df = df.drop("selected", axis=1)
 
     if build_annoy == True:
