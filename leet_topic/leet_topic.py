@@ -317,7 +317,7 @@ def create_html(df, document_field, topic_field, html_filename, topic_data, tf_i
     if tf_idf:
         col3 = column(p2, row(column(doc_search, doc_search_results), column(top_search, top_search_results)))
     else:
-        col3 = column(p2, doc_search, doc_search_results)
+        col3 = column(p2)
     app_row = row(col1, col2, col3)
     if app_name != "":
         title = Div(text=f'<h1 style="text-align: center">{app_name}</h1>')
