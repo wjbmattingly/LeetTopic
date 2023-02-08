@@ -115,7 +115,7 @@ def create_html(df, document_field, topic_field, html_filename, topic_data, tf_i
                         }
     scatter2 = p2.circle(**circle_kwargs2)
 
-    multi_choice = MultiChoice(value=[], options=categories, title='Selection:')
+    multi_choice = MultiChoice(value=[], options=categories, width = 500, title='Selection:')
     data_table = DataTable(source=s2,
                            columns=columns,
                            width=700,
@@ -127,6 +127,7 @@ def create_html(df, document_field, topic_field, html_filename, topic_data, tf_i
     top_search = TextInput(title="Topic Search")
     doc_search_results = TextAreaInput(value = "", title = "Search Results", width = 250, height=500)
     doc_search = TextInput(title="Document Search")
+    topic_desc = TextAreaInput(value = "", title = "Topic Descriptions", width = 500, height=500)
     
     def field_string(field):
         return """d2['"""+field+"""'] = []\n"""
@@ -169,7 +170,7 @@ def create_html(df, document_field, topic_field, html_filename, topic_data, tf_i
     )
 
 
-    multi_choice.js_on_change('value', CustomJS(args=dict(s1=s1, s2=s2, scatter=scatter), code="""
+    multi_choice.js_on_change('value', CustomJS(args=dict(s1=s1, s2=s2, scatter=scatter, topic_desc=topic_desc, topic_data=topic_data), code="""
             let values = cb_obj.value;
             let unchange_values = cb_obj.value;
             const d1 = s1.data;
@@ -199,6 +200,20 @@ def create_html(df, document_field, topic_field, html_filename, topic_data, tf_i
                         """
                 }
             }
+            let data = [];
+            for (const [key, value] of topic_data) {
+                for (let i=0; i < unchange_values.length; i++) {
+                    if (key == unchange_values[i]) {
+                        let keywords = value["key_words"];
+                        data.push("Topic " + key + ": ");
+                        for (let i=0; i < keywords.length; i++) {
+                            data.push(keywords[i][0] + " " + keywords[i][1]);
+                        }
+                        data.push("\\r\\n");
+                    }
+                }
+            }
+            topic_desc.value = data.join("\\r\\n");
             s2.change.emit();
         """)
     )
@@ -310,7 +325,7 @@ def create_html(df, document_field, topic_field, html_filename, topic_data, tf_i
         list_creator(fields=fields, str_type="push")+
         """}
         const res = [...new Set(d2['"""+topic_field+"""'])];
-        d4.value = res.map(function(e){return e.toString()});
+        s4.value = res.map(function(e){return e.toString()});
         s1.change.emit();
         s2.change.emit();
         
@@ -318,7 +333,7 @@ def create_html(df, document_field, topic_field, html_filename, topic_data, tf_i
     """)
     )
 
-    col1 = column(p1, multi_choice) 
+    col1 = column(p1, multi_choice, topic_desc) 
     col2 = column(data_table, selected_texts)
     if tf_idf:
         col3 = column(p2, row(column(doc_search, doc_search_results), column(top_search, top_search_results)))
