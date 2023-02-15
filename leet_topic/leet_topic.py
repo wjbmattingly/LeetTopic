@@ -170,7 +170,7 @@ def create_html(df, document_field, topic_field, html_filename, topic_data, tf_i
     )
 
 
-    multi_choice.js_on_change('value', CustomJS(args=dict(s1=s1, s2=s2, scatter=scatter, topic_desc=topic_desc, topic_data=topic_data), code="""
+    multi_choice.js_on_change('value', CustomJS(args=dict(s1=s1, s2=s2, scatter=scatter, topic_desc=topic_desc, topic_data=topic_data, tf_idf=tf_idf), code="""
             let values = cb_obj.value;
             let unchange_values = cb_obj.value;
             const d1 = s1.data;
@@ -200,21 +200,23 @@ def create_html(df, document_field, topic_field, html_filename, topic_data, tf_i
                         """
                 }
             }
-            let data = [];
-            for (const [key, value] of topic_data) {
-                for (let i=0; i < unchange_values.length; i++) {
-                    if (key == unchange_values[i]) {
-                        let keywords = value["key_words"];
-                        data.push("Topic " + key + ": ");
-                        for (let i=0; i < keywords.length; i++) {
-                            data.push(keywords[i][0] + " " + keywords[i][1]);
+            if (tf_idf) {
+                let data = [];
+                for (const key of Object.keys(topic_data)) {
+                    for (let i=0; i < unchange_values.length; i++) {
+                        if (key == unchange_values[i]) {
+                            let keywords = topic_data[key]["key_words"];
+                            data.push("Topic " + key + ": ");
+                            for (let i=0; i < keywords.length; i++) {
+                                data.push(keywords[i][0] + " " + keywords[i][1]);
+                            }
+                            data.push("\\r\\n");
                         }
-                        data.push("\\r\\n");
                     }
                 }
+                topic_desc.value = data.join("\\r\\n");
+                s2.change.emit();
             }
-            topic_desc.value = data.join("\\r\\n");
-            s2.change.emit();
         """)
     )
 
@@ -242,8 +244,8 @@ def create_html(df, document_field, topic_field, html_filename, topic_data, tf_i
         const search_term = cb_obj.value;
         let hits = [];
         let counter = 0;
-        for (const [key, value] of topic_data) {
-            const keywords = value["key_words"];
+        for (const key of Object.keys(topic_data)) {
+            const keywords = topic_data[key]["key_words"];
             for (let i=0; i < keywords.length; i++) {
                 if (keywords[i][0] == search_term) {
                     hits.push([key, i]);
@@ -333,7 +335,10 @@ def create_html(df, document_field, topic_field, html_filename, topic_data, tf_i
     """)
     )
 
-    col1 = column(p1, multi_choice, topic_desc) 
+    if tf_idf:
+        col1 = column(p1, multi_choice, topic_desc) 
+    else:
+        col1 = column(p1, multi_choice) 
     col2 = column(data_table, selected_texts)
     if tf_idf:
         col3 = column(p2, row(column(doc_search, doc_search_results), column(top_search, top_search_results)))
@@ -425,7 +430,7 @@ def create_tfidf(df, topic_data, document_field, spacy_model):
     df["lemma_docs"] = lemma_docs
     vectorizer = TfidfVectorizer(stop_words="english")
     vectors = vectorizer.fit_transform(lemma_docs)
-    feature_names = vectorizer.get_feature_names()
+    feature_names = vectorizer.get_feature_names_out()
     dense = vectors.todense()
     denselist = dense.tolist()
     tfidf_df = pd.DataFrame(denselist, columns=feature_names)
@@ -433,7 +438,7 @@ def create_tfidf(df, topic_data, document_field, spacy_model):
     top_n = 10
     tfidf_words = []
     for vector in vectors:
-        top_words = (sorted(list(zip(vectorizer.get_feature_names(),
+        top_words = (sorted(list(zip(vectorizer.get_feature_names_out(),
                                                      vector.sum(0).getA1())),
                                          key=lambda x: x[1], reverse=True)[:top_n])
         tfidf_words.append(top_words)
@@ -448,7 +453,7 @@ def create_tfidf(df, topic_data, document_field, spacy_model):
 
     for leet_label, data in topic_data.items():
         X = vectorizer.fit_transform(data["doc_lemmas"])
-        words = (sorted(list(zip(vectorizer.get_feature_names(),
+        words = (sorted(list(zip(vectorizer.get_feature_names_out(),
                                                      X.sum(0).getA1())),
                                          key=lambda x: x[1], reverse=True)[:top_n])
         topic_data[leet_label]["key_words"] = words

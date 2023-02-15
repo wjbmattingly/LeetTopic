@@ -23,6 +23,7 @@ setup(
                      "wrapt==1.14.0",
                      "tensorflow>=2.8.0",
                      "spacy>=3.3.0",
-                     "gensim>=4.2.0",
+                     "gensim>=4.3.0",
+                     "annoy>=1.17.0"
                      ],
 )
