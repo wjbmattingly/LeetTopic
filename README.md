@@ -81,13 +81,31 @@ leet_df, topic_data, annoy_index = leet_topic.LeetTopic(df, "descriptions",
             build_annoy=True)
 ```
 
+To leverage the Annoy Index, one can easily create a semantic search engine. One can query the index, for example, by encoding a new text with the same model.
+
+```python
+import pandas as pd
+from leet_topic import leet_topic
+from sentence_transformers import SentenceTransformer
+
+
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
+emb = model.encode("An individual who was arrested.")
+
+res = annoy_index.get_nns_by_vector(emb, 10)
+
+print(df.iloc[res].descriptions.tolist())
+
+```
+
 
 # Outputs
 This code above will generate a new DataFrame with the UMAP Projection (x, y), hdbscan_labels, and leet_labels, and top-n words for each document. It will also output data about each topic including the central plot of each vector, the documents assigned to it, top-n words associated with it.
 
 Finally, the output will create an HTML file that is a self-contained Bokeh application like the image below.
 
-![demo](https://github.com/wjbmattingly/LeetTopic/raw/main/images/leet-demo.png)
+![demo](https://github.com/wjbmattingly/LeetTopic/raw/main/images/demo-search.png)
 
 # Steps
 

@@ -11,10 +11,7 @@ from random import random
 from bokeh.layouts import row, column
 from bokeh.models import ColumnDataSource, CustomJS, DataTable, TableColumn, MultiChoice, HTMLTemplateFormatter, TextAreaInput, Div, TextInput
 from bokeh.plotting import figure, output_file, show
-import pandas as pd
-from sentence_transformers import SentenceTransformer
-import umap
-import hdbscan
+
 from bokeh.palettes import Category10, Cividis256, Turbo256
 from bokeh.transform import linear_cmap
 from typing import Tuple, Optional
@@ -492,7 +489,8 @@ def create_annoy(doc_embeddings,
                 annoy_branches=10,
                 annoy_metric="angular"
                 ):
-    t = AnnoyIndex(doc_embeddings.shape[0], annoy_metric)
+
+    t = AnnoyIndex(doc_embeddings.shape[1], annoy_metric)
     for idx, embedding in enumerate(doc_embeddings):
         t.add_item(idx, embedding)
 
@@ -535,7 +533,7 @@ def LeetTopic(df: pd.DataFrame,
         These are the names of the columns you wish to include in the Bokeh application.
     max_distance: float (Optional default .5)
         The maximum distance an outlier document can be to the nearest topic vector to be assigned
-    spacy_modoel: str (Optional default en_core_web_sm)
+    spacy_model: str (Optional default en_core_web_sm)
         the spaCy language model you will use for lemmatization
     encoding_model: str (Optional default all-MiniLM-L6-v2)
         the sentence transformers model that you wish to use to encode your documents
