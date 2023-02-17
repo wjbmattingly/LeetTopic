@@ -229,16 +229,21 @@ def create_html(df, document_field, topic_field, html_filename, extra_fields=[],
     show(layout)
 
 
-def create_labels(df, document_field, encoding_model,
+def create_labels(df, document_field, encoding_model,  embeddings=None,
                   umap_params={"n_neighbors": 50, "min_dist": 0.01, "metric": 'correlation'},
                   hdbscan_params={"min_samples": 10, "min_cluster_size": 50}):
 
-    #Load Transformer Model
-    model = SentenceTransformer(encoding_model)
+    if embeddings is not None:
+        # Use pre-computed embeddings
+        logging.info("Using pre-computed embeddings")
+        doc_embeddings = embeddings
+    else:
+        #Load Transformer Model
+        model = SentenceTransformer(encoding_model)
 
-    #Create Document Embeddings
-    logging.info("Encoding Documents")
-    doc_embeddings = model.encode(df[document_field])
+        #Create Document Embeddings
+        logging.info("Encoding Documents")
+        doc_embeddings = model.encode(df[document_field])
 
     #Create UMAP Projection
     logging.info("Creating UMAP Projections")
@@ -369,6 +374,7 @@ def LeetTopic(df: pd.DataFrame,
             encoding_model='all-MiniLM-L6-v2',
             umap_params={"n_neighbors": 50, "min_dist": 0.01, "metric": 'correlation'},
             hdbscan_params={"min_samples": 10, "min_cluster_size": 50},
+            embeddings = None,
             app_name=""
             ):
     """
@@ -401,6 +407,9 @@ def LeetTopic(df: pd.DataFrame,
     hdbscan_params: dict (Optional default {"min_samples": 10, "min_cluster_size": 50})
         dictionary of keys to HBDscan params and values for those params
 
+    embeddings: numpy.ndarray (Optional)
+        pre-computed embeddings
+
     app_name: str (Optional)
         title of your Bokeh application
 
@@ -417,7 +426,7 @@ def LeetTopic(df: pd.DataFrame,
 
     download_spacy_model(spacy_model)
 
-    df = create_labels(df, document_field, encoding_model, umap_params=umap_params, hdbscan_params=hdbscan_params)
+    df = create_labels(df, document_field, encoding_model, umap_params=umap_params, hdbscan_params=hdbscan_params, embeddings=embeddings)
     logging.info("Calculating the Center of the Topic Clusters")
     topic_data = find_centers(df)
     logging.info(f"Recalculating clusters based on a max distance of {max_distance} from any topic vector")
