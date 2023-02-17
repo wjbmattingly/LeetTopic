@@ -12,7 +12,6 @@ from bokeh.layouts import row, column
 from bokeh.models import ColumnDataSource, CustomJS, DataTable, TableColumn, MultiChoice, HTMLTemplateFormatter, TextAreaInput, Div
 from bokeh.plotting import figure, output_file, show
 import pandas as pd
-from sentence_transformers import SentenceTransformer
 import umap
 import hdbscan
 from bokeh.palettes import Category10, Cividis256, Turbo256
