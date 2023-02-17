@@ -302,7 +302,7 @@ def create_tfidf(df, topic_data, document_field, spacy_model):
     df["lemma_docs"] = lemma_docs
     vectorizer = TfidfVectorizer(stop_words="english")
     vectors = vectorizer.fit_transform(lemma_docs)
-    feature_names = vectorizer.get_feature_names()
+    feature_names = vectorizer.get_feature_names_out()
     dense = vectors.todense()
     denselist = dense.tolist()
     tfidf_df = pd.DataFrame(denselist, columns=feature_names)
@@ -310,7 +310,7 @@ def create_tfidf(df, topic_data, document_field, spacy_model):
     top_n = 10
     tfidf_words = []
     for vector in vectors:
-        top_words = (sorted(list(zip(vectorizer.get_feature_names(),
+        top_words = (sorted(list(zip(vectorizer.get_feature_names_out(),
                                                      vector.sum(0).getA1())),
                                          key=lambda x: x[1], reverse=True)[:top_n])
         tfidf_words.append(top_words)
@@ -325,7 +325,7 @@ def create_tfidf(df, topic_data, document_field, spacy_model):
 
     for leet_label, data in topic_data.items():
         X = vectorizer.fit_transform(data["doc_lemmas"])
-        words = (sorted(list(zip(vectorizer.get_feature_names(),
+        words = (sorted(list(zip(vectorizer.get_feature_names_out(),
                                                      X.sum(0).getA1())),
                                          key=lambda x: x[1], reverse=True)[:top_n])
         topic_data[leet_label]["key_words"] = words
