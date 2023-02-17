@@ -22,6 +22,7 @@ import bokeh.transform
 import string
 import logging
 import warnings
+import pickle
 
 warnings.filterwarnings("ignore")
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
@@ -237,6 +238,7 @@ def create_labels(df, document_field, encoding_model,  embeddings=None,
         # Use pre-computed embeddings
         logging.info("Using pre-computed embeddings")
         doc_embeddings = embeddings
+
     else:
         #Load Transformer Model
         model = SentenceTransformer(encoding_model)
@@ -244,6 +246,11 @@ def create_labels(df, document_field, encoding_model,  embeddings=None,
         #Create Document Embeddings
         logging.info("Encoding Documents")
         doc_embeddings = model.encode(df[document_field])
+
+        # Save embeddings
+        logging.info("Saving Embeddings")
+        with open("embeddings.pickle", "wb") as fichier:
+            pickle.dump(doc_embeddings, fichier)
 
     #Create UMAP Projection
     logging.info("Creating UMAP Projections")
