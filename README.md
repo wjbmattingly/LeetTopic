@@ -34,7 +34,7 @@ leet_df, topic_data = leet_topic.LeetTopic(df,
 ## Multilingual Support
 With LeetTopic, you can work with texts in any language supported by spaCy for lemmatization and any model from HuggingFace via Sentence Transformers.
 
-Here is an examplpe working with Croatian
+Here is an example working with Croatian
 
 ```python
 import pandas as pd
