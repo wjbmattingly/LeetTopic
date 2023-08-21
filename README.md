@@ -105,7 +105,7 @@ This code above will generate a new DataFrame with the UMAP Projection (x, y), h
 
 Finally, the output will create an HTML file that is a self-contained Bokeh application like the image below.
 
-![demo](https://github.com/wjbmattingly/LeetTopic/raw/main/images/demo-search.png)
+![demo](https://github.com/wjbmattingly/LeetTopic/raw/main/images/demo-new.JPG)
 
 # Steps
 
