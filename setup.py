@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 with open("README.md", "r", encoding="utf-8") as f:
     LONG_DESCRIPTION = f.read()
 
-VERSION = '0.0.9'
+VERSION = '0.0.10'
 DESCRIPTION = 'A new transformer-based topic modeling library.'
 
 setup(
@@ -23,6 +23,7 @@ setup(
                      "wrapt==1.14.0",
                      "tensorflow>=2.8.0",
                      "spacy>=3.3.0",
-                     "gensim>=4.2.0",
+                     "gensim>=4.3.0",
+                     "annoy>=1.17.0"
                      ],
 )

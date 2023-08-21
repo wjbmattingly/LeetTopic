@@ -1,8 +1,10 @@
+[![PyPI - PyPi](https://img.shields.io/pypi/v/leet-topic)](https://pypi.org/project/leet-topic/)
+
 ![Leet Topic Logo](https://github.com/wjbmattingly/LeetTopic/raw/main/images/LeeTopic.png)
 
-LeetTopic builds upon Top2Vec, BerTopic and other transformer-based topic modeling Python libraries. Unlike BerTopic and Top2Vec, LeetTopic allows users to control the degree to which outliers are resolved into neighboring topics.
+LeetTopic builds upon [Top2Vec](https://github.com/ddangelov/Top2Vec), [BerTopic](https://github.com/MaartenGr/BERTopic) and other transformer-based topic modeling Python libraries. Unlike BerTopic and Top2Vec, LeetTopic allows users to control the degree to which outliers are resolved into neighboring topics.
 
-It also lets you turn any DataFrame into a Bokeh application for exploring your documents and topics.
+It also lets you turn any DataFrame into a [Bokeh](https://bokeh.org/) application for exploring your documents and topics. As of 0.0.10, LeetTopic also allows users to generate an [Annoy](https://github.com/spotify/annoy) Index as part of the LeetTopic pipeline. This allows users to construct a query their data.
 
 # Installation
 
@@ -66,12 +68,44 @@ leet_df, topic_data = leet_topic.LeetTopic(df,
                                           max_distance=.5)
 ```
 
+## Create an Annoy Index
+As of 0.0.10, users can also return an Annoy Index.
+
+```python
+import pandas as pd
+from leet_topic import leet_topic
+
+df = pd.read_json("data/vol7.json")
+leet_df, topic_data, annoy_index = leet_topic.LeetTopic(df, "descriptions",
+            "demo.html",
+            build_annoy=True)
+```
+
+To leverage the Annoy Index, one can easily create a semantic search engine. One can query the index, for example, by encoding a new text with the same model.
+
+```python
+import pandas as pd
+from leet_topic import leet_topic
+from sentence_transformers import SentenceTransformer
+
+
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
+emb = model.encode("An individual who was arrested.")
+
+res = annoy_index.get_nns_by_vector(emb, 10)
+
+print(df.iloc[res].descriptions.tolist())
+
+```
+
+
 # Outputs
 This code above will generate a new DataFrame with the UMAP Projection (x, y), hdbscan_labels, and leet_labels, and top-n words for each document. It will also output data about each topic including the central plot of each vector, the documents assigned to it, top-n words associated with it.
 
 Finally, the output will create an HTML file that is a self-contained Bokeh application like the image below.
 
-![demo](https://github.com/wjbmattingly/LeetTopic/raw/main/images/leet-demo.png)
+![demo](https://github.com/wjbmattingly/LeetTopic/raw/main/images/demo-new.JPG)
 
 # Steps
 
