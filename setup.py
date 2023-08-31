@@ -8,7 +8,7 @@ DESCRIPTION = 'A new transformer-based topic modeling library.'
 
 setup(
     name="leet_topic",
-    author="WJB Mattingly",
+    author="WJB Mattingly, Joel Lee",
     version=VERSION,
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
@@ -19,7 +19,7 @@ setup(
                      "sentence_transformers>=2.0.0",
                      "umap-learn>=0.5.0",
                      "hdbscan>=0.8.0",
-                     "protobuf<=3.20.0",
+                     "protobuf>=4.24.2",
                      "wrapt==1.14.0",
                      "tensorflow>=2.8.0",
                      "spacy>=3.3.0",
